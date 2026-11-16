@@ -5,6 +5,7 @@ import java.time.LocalDate;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -20,25 +21,26 @@ public class Lancamento {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 200)
     private String descricao;
 
-    @Column(nullable = false)
+    @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal valor;
 
     //Indicará no banco de dados que a coluna vai se chamar data_lancamento
     @Column(name = "data_lancamento", nullable = false)
     private LocalDate dataLancamento;
 
+    @Column(length = 500)
     private String observacao;
 
     //Indicará no banco de dados que a coluna vai se chamar categoria_id e irá relacionar-se com a tabela de categorias
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "categoria_id", nullable = false)
     private Categoria categoria;
 
     //Indicará no banco de dados que a coluna vai se chamar usuario_id e irá relacionar-se com a tabela de usuarios
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "usuario_id", nullable = false)
     private Usuario usuario;
 

@@ -13,11 +13,15 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import br.com.senaisp.bauru.prjCtrlFinanceiro.models.Lancamento;
+import br.com.senaisp.bauru.prjCtrlFinanceiro.dto.LancamentoRequest;
+import br.com.senaisp.bauru.prjCtrlFinanceiro.dto.LancamentoResponse;
 import br.com.senaisp.bauru.prjCtrlFinanceiro.services.LancamentoService;
 
+// O servlet path já é /api (application.properties), então não repetimos /api aqui.
+// ATENÇÃO: usuarioId na rota é DIDÁTICO. Não é autenticação nem isolamento de segurança.
+// Com JWT, ele passará a vir do contexto de segurança.
 @RestController
-@RequestMapping("/lancamentos")
+@RequestMapping("/usuarios/{usuarioId}/lancamentos")
 @CrossOrigin(origins = "*")
 public class LancamentoController {
 
@@ -28,43 +32,33 @@ public class LancamentoController {
     }
 
     @GetMapping
-    public List<Lancamento> listar() {
-        return service.listar();
+    public List<LancamentoResponse> listar(@PathVariable Long usuarioId) {
+        return service.listar(usuarioId);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Lancamento> buscarPorId(@PathVariable Long id) {
-        Lancamento lancamento = service.buscarPorId(id);
-        if (lancamento == null) {
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok(lancamento);
+    public LancamentoResponse buscarPorId(@PathVariable Long usuarioId,
+                                          @PathVariable Long id) {
+        return service.buscarPorId(usuarioId, id);
     }
 
     @PostMapping
-    public ResponseEntity<Lancamento> cadastrar(@RequestBody Lancamento lancamento) {
-        Lancamento novoLancamento = service.salvar(lancamento);
-        return ResponseEntity.status(201).body(novoLancamento);
+    public ResponseEntity<LancamentoResponse> cadastrar(
+            @PathVariable Long usuarioId, @RequestBody LancamentoRequest dados) {
+        return ResponseEntity.status(201).body(service.cadastrar(usuarioId, dados));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Lancamento> atualizar(@PathVariable Long id,
-                                                @RequestBody Lancamento lancamento) {
-
-        Lancamento lancamentoAtualizado = service.atualizar(id, lancamento);
-        if (lancamentoAtualizado == null) {
-            return ResponseEntity.notFound().build();
-        }
-
-        return ResponseEntity.ok(lancamentoAtualizado);
+    public LancamentoResponse atualizar(@PathVariable Long usuarioId,
+                                        @PathVariable Long id,
+                                        @RequestBody LancamentoRequest dados) {
+        return service.atualizar(usuarioId, id, dados);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> excluir(@PathVariable Long id) {
-        boolean excluido = service.excluir(id);
-        if (!excluido) {
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<Void> excluir(@PathVariable Long usuarioId,
+                                        @PathVariable Long id) {
+        service.excluir(usuarioId, id);
         return ResponseEntity.noContent().build();
     }
 }
