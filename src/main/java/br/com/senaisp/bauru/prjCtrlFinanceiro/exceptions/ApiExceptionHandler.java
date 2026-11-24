@@ -5,6 +5,7 @@ import java.util.Map;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
@@ -43,5 +44,13 @@ public class ApiExceptionHandler {
     public ResponseEntity<Map<String, String>> conflito(DataIntegrityViolationException ex) {
         return ResponseEntity.status(409)
                 .body(Map.of("erro", "Operação viola uma restrição de integridade dos dados"));
+    }
+
+    // 401 - login com e-mail/senha inválidos (mensagem genérica de propósito).
+    // Token ausente/inválido/expirado NÃO passa por aqui: o filtro do Spring Security responde antes do controller.
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<Map<String, String>> credenciaisInvalidas(BadCredentialsException ex) {
+        return ResponseEntity.status(401)
+                .body(Map.of("erro", "Credenciais inválidas"));
     }
 }

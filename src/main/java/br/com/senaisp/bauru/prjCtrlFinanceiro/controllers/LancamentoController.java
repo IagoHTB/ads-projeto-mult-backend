@@ -3,6 +3,8 @@ package br.com.senaisp.bauru.prjCtrlFinanceiro.controllers;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,11 +19,9 @@ import br.com.senaisp.bauru.prjCtrlFinanceiro.dto.LancamentoRequest;
 import br.com.senaisp.bauru.prjCtrlFinanceiro.dto.LancamentoResponse;
 import br.com.senaisp.bauru.prjCtrlFinanceiro.services.LancamentoService;
 
-// O servlet path já é /api (application.properties), então não repetimos /api aqui.
-// ATENÇÃO: usuarioId na rota é DIDÁTICO. Não é autenticação nem isolamento de segurança.
-// Com JWT, ele passará a vir do contexto de segurança.
+// O dono do lançamento vem SEMPRE do token (jwt.getSubject()), nunca da URL.
 @RestController
-@RequestMapping("/usuarios/{usuarioId}/lancamentos")
+@RequestMapping("/lancamentos")
 @CrossOrigin(origins = "*")
 public class LancamentoController {
 
@@ -31,34 +31,38 @@ public class LancamentoController {
         this.service = service;
     }
 
+    private Long usuarioId(Jwt jwt) {
+        return Long.valueOf(jwt.getSubject());
+    }
+
     @GetMapping
-    public List<LancamentoResponse> listar(@PathVariable Long usuarioId) {
-        return service.listar(usuarioId);
+    public List<LancamentoResponse> listar(@AuthenticationPrincipal Jwt jwt) {
+        return service.listar(usuarioId(jwt));
     }
 
     @GetMapping("/{id}")
-    public LancamentoResponse buscarPorId(@PathVariable Long usuarioId,
+    public LancamentoResponse buscarPorId(@AuthenticationPrincipal Jwt jwt,
                                           @PathVariable Long id) {
-        return service.buscarPorId(usuarioId, id);
+        return service.buscarPorId(usuarioId(jwt), id);
     }
 
     @PostMapping
     public ResponseEntity<LancamentoResponse> cadastrar(
-            @PathVariable Long usuarioId, @RequestBody LancamentoRequest dados) {
-        return ResponseEntity.status(201).body(service.cadastrar(usuarioId, dados));
+            @AuthenticationPrincipal Jwt jwt, @RequestBody LancamentoRequest dados) {
+        return ResponseEntity.status(201).body(service.cadastrar(usuarioId(jwt), dados));
     }
 
     @PutMapping("/{id}")
-    public LancamentoResponse atualizar(@PathVariable Long usuarioId,
+    public LancamentoResponse atualizar(@AuthenticationPrincipal Jwt jwt,
                                         @PathVariable Long id,
                                         @RequestBody LancamentoRequest dados) {
-        return service.atualizar(usuarioId, id, dados);
+        return service.atualizar(usuarioId(jwt), id, dados);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> excluir(@PathVariable Long usuarioId,
+    public ResponseEntity<Void> excluir(@AuthenticationPrincipal Jwt jwt,
                                         @PathVariable Long id) {
-        service.excluir(usuarioId, id);
+        service.excluir(usuarioId(jwt), id);
         return ResponseEntity.noContent().build();
     }
 }
